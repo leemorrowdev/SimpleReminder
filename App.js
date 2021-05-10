@@ -34,9 +34,14 @@ const colors = {
 const MILLISECONDS_IN_MINUTE = 60000;
 
 const App: () => Node = () => {
-  const [minutesText, setMinutesText] = useState();
+  const [minutesText, setMinutesText] = useState(0);
   const [minutesReminder, setMinutesReminder] = useState();
   const isDarkMode = useColorScheme() === 'dark';
+
+  const onMinutesTextChanged = _minutesText => {
+    // Remove nonnumeric characters and convert to integer
+    setMinutesText(parseInt(_minutesText.replace(/\D/g, ''), 10));
+  };
 
   const onSetReminderPressed = () => {
     BackgroundTimer.stopBackgroundTimer();
@@ -72,7 +77,7 @@ const App: () => Node = () => {
         <TextInput
           style={styles.input}
           keyboardType={'numeric'}
-          onChangeText={_minutesText => setMinutesText(_minutesText)}
+          onChangeText={_minutesText => onMinutesTextChanged(_minutesText)}
           value={minutesText}
           maxLength={15}
           selectionColor={colors.primary}
