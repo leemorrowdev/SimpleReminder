@@ -1,6 +1,6 @@
 /**
- * Sample React Native App
- * https://github.com/facebook/react-native
+ * SimpleReminder
+ * https://github.com/leemorrowdev/SimpleReminder
  *
  * @format
  * @flow strict-local
@@ -9,12 +9,13 @@
 import React, {useState} from 'react';
 import type {Node} from 'react';
 import {
-  TouchableOpacity,
   SafeAreaView,
   StatusBar,
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
+  Vibration,
   View,
   useColorScheme,
 } from 'react-native';
@@ -40,7 +41,7 @@ const App: () => Node = () => {
     BackgroundTimer.stopBackgroundTimer();
     if (minutes) {
       BackgroundTimer.runBackgroundTimer(() => {
-        //code that will be called every 3 seconds
+        Vibration.vibrate();
       }, minutes * MILLISECONDS_IN_MINUTE);
     }
   };
