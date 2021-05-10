@@ -34,20 +34,23 @@ const colors = {
 const MILLISECONDS_IN_MINUTE = 60000;
 
 const App: () => Node = () => {
-  const [minutes, setMinutes] = useState();
+  const [minutesText, setMinutesText] = useState();
+  const [minutesReminder, setMinutesReminder] = useState();
   const isDarkMode = useColorScheme() === 'dark';
 
   const onSetReminderPressed = () => {
     BackgroundTimer.stopBackgroundTimer();
-    if (minutes) {
+    if (minutesText) {
+      setMinutesReminder(minutesText);
       BackgroundTimer.runBackgroundTimer(() => {
         Vibration.vibrate();
-      }, minutes * MILLISECONDS_IN_MINUTE);
+      }, minutesText * MILLISECONDS_IN_MINUTE);
     }
   };
 
   const onDisableReminderPressed = () => {
     BackgroundTimer.stopBackgroundTimer();
+    setMinutesReminder(0);
   };
 
   return (
@@ -59,7 +62,7 @@ const App: () => Node = () => {
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       <View style={styles.content}>
         <Text style={styles.minutes}>
-          <Text style={styles.highlightText}>{minutes || 0}</Text>
+          <Text style={styles.highlightText}>{minutesReminder || 0}</Text>
           <Text style={isDarkMode ? styles.lightText : styles.darkText}>
             {' '}
             minutes
@@ -69,8 +72,8 @@ const App: () => Node = () => {
         <TextInput
           style={styles.input}
           keyboardType={'numeric'}
-          onChangeText={_minutes => setMinutes(_minutes)}
-          value={minutes}
+          onChangeText={_minutesText => setMinutesText(_minutesText)}
+          value={minutesText}
           maxLength={15}
           selectionColor={colors.primary}
           disableFullscreenUI={true}
