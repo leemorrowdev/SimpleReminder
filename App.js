@@ -9,7 +9,7 @@
 import React, {useState} from 'react';
 import type {Node} from 'react';
 import {
-  Button,
+  TouchableOpacity,
   SafeAreaView,
   StatusBar,
   StyleSheet,
@@ -18,6 +18,7 @@ import {
   View,
   useColorScheme,
 } from 'react-native';
+import BackgroundTimer from 'react-native-background-timer';
 
 const colors = {
   primary: '#1292B4',
@@ -29,11 +30,24 @@ const colors = {
   black: '#000',
 };
 
+const MILLISECONDS_IN_MINUTE = 60000;
+
 const App: () => Node = () => {
-  const [interval, setInterval] = useState();
+  const [minutes, setMinutes] = useState();
   const isDarkMode = useColorScheme() === 'dark';
 
-  const onPress = () => {};
+  const onSetReminderPressed = () => {
+    BackgroundTimer.stopBackgroundTimer();
+    if (minutes) {
+      BackgroundTimer.runBackgroundTimer(() => {
+        //code that will be called every 3 seconds
+      }, minutes * MILLISECONDS_IN_MINUTE);
+    }
+  };
+
+  const onDisableReminderPressed = () => {
+    BackgroundTimer.stopBackgroundTimer();
+  };
 
   return (
     <SafeAreaView
@@ -43,17 +57,35 @@ const App: () => Node = () => {
       ]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       <View style={styles.content}>
+        <Text style={styles.minutes}>
+          <Text style={styles.highlightText}>{minutes || 0}</Text>
+          <Text style={isDarkMode ? styles.lightText : styles.darkText}>
+            {' '}
+            minutes
+          </Text>
+        </Text>
         <Text style={styles.label}>Minutes</Text>
         <TextInput
           style={styles.input}
           keyboardType={'numeric'}
-          onChangeText={_interval => setInterval(_interval)}
-          value={interval}
+          onChangeText={_minutes => setMinutes(_minutes)}
+          value={minutes}
           maxLength={15}
           selectionColor={colors.primary}
           disableFullscreenUI={true}
         />
-        <Button onPress={onPress} title="Set Reminder" color={colors.primary} />
+        <TouchableOpacity
+          onPress={onSetReminderPressed}
+          style={[styles.button, styles.contained]}>
+          <Text style={isDarkMode ? styles.lightText : styles.darkText}>
+            SET REMINDER
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={onDisableReminderPressed}
+          style={[styles.button, styles.outlined]}>
+          <Text style={styles.highlightText}>DISABLE REMINDER</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -70,6 +102,15 @@ const styles = StyleSheet.create({
   darkBackground: {
     backgroundColor: colors.darker,
   },
+  lightText: {
+    color: colors.lighter,
+  },
+  darkText: {
+    color: colors.darker,
+  },
+  highlightText: {
+    color: colors.primary,
+  },
   content: {
     margin: 48,
   },
@@ -81,6 +122,23 @@ const styles = StyleSheet.create({
     backgroundColor: colors.dark,
     borderRadius: 2,
     marginVertical: 16,
+  },
+  button: {
+    alignItems: 'center',
+    marginVertical: 16,
+    paddingVertical: 8,
+    borderRadius: 2,
+  },
+  contained: {
+    backgroundColor: colors.primary,
+  },
+  outlined: {
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  minutes: {
+    marginVertical: 16,
+    fontSize: 56,
   },
 });
 
