@@ -35,6 +35,9 @@ const MILLISECONDS_IN_MINUTE = 60000;
 const App: () => Node = () => {
   const [minutesInput, setMinutesInput] = useState('');
   const [minutesReminder, setMinutesReminder] = useState('0');
+  const [messageInput, setMessageInput] = useState('');
+  const [messageReminder, setMessageReminder] = useState('');
+
   const isDarkMode = useColorScheme() === 'dark';
 
   const onSetReminderPressed = () => {
@@ -43,6 +46,8 @@ const App: () => Node = () => {
     if (minutesInput) {
       const minutes = parseInt(minutesInput, 10);
       setMinutesReminder(minutes);
+
+      setMessageReminder(messageInput);
 
       if (!minutes) {
         Alert.alert('Invalid input', '', [
@@ -61,7 +66,7 @@ const App: () => Node = () => {
         repeatType: 'time',
         repeatTime: minutes * MILLISECONDS_IN_MINUTE,
         title: 'Simple Reminder',
-        message: 'My Notification Message', // Required
+        message: messageInput, // Required
         allowWhileIdle: true,
       });
     }
@@ -70,6 +75,7 @@ const App: () => Node = () => {
   const onDisableReminderPressed = () => {
     PushNotification.cancelLocalNotifications({id: '0'});
     setMinutesReminder('0');
+    setMessageReminder('');
   };
 
   return (
@@ -80,13 +86,18 @@ const App: () => Node = () => {
       ]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       <View style={styles.content}>
-        <Text style={styles.minutes}>
-          <Text style={styles.highlightText}>{minutesReminder}</Text>
-          <Text style={isDarkMode ? styles.lightText : styles.darkText}>
-            {' '}
-            minutes
+        <View style={styles.reminder}>
+          <Text style={styles.minutes}>
+            <Text style={styles.highlightText}>{minutesReminder}</Text>
+            <Text style={isDarkMode ? styles.lightText : styles.darkText}>
+              {' '}
+              {minutesReminder === 1 ? 'minute' : 'minutes'}
+            </Text>
           </Text>
-        </Text>
+          <Text style={[styles.message, styles.highlightText]}>
+            {messageReminder}
+          </Text>
+        </View>
         <Text style={styles.label}>Minutes</Text>
         <TextInput
           style={[
@@ -97,7 +108,20 @@ const App: () => Node = () => {
           keyboardType={'numeric'}
           onChangeText={_minutesInput => setMinutesInput(_minutesInput)}
           value={minutesInput}
-          maxLength={15}
+          maxLength={4}
+          selectionColor={colors.primary}
+          disableFullscreenUI={true}
+        />
+        <Text style={styles.label}>Message</Text>
+        <TextInput
+          style={[
+            styles.input,
+            isDarkMode ? styles.darkBackground : styles.lightBackground,
+            isDarkMode ? styles.lightText : styles.darkText,
+          ]}
+          onChangeText={_messageInput => setMessageInput(_messageInput)}
+          value={messageInput}
+          maxLength={32}
           selectionColor={colors.primary}
           disableFullscreenUI={true}
         />
@@ -167,9 +191,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.primary,
   },
+  reminder: {
+    marginVertical: 40,
+  },
   minutes: {
-    marginVertical: 16,
     fontSize: 56,
+  },
+  message: {
+    fontSize: 21,
   },
 });
 
