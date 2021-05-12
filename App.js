@@ -6,7 +6,7 @@
  * @flow strict-local
  */
 
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import type {Node} from 'react';
 import {
   Alert,
@@ -18,6 +18,7 @@ import {
   View,
   useColorScheme,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import PushNotification from 'react-native-push-notification';
 
 const colors = {
@@ -39,6 +40,39 @@ const App: () => Node = () => {
   const [messageReminder, setMessageReminder] = useState('');
 
   const isDarkMode = useColorScheme() === 'dark';
+
+  useEffect(() => {
+    const loadReminder = async () => {
+      const _minutesReminder = await AsyncStorage.getItem(
+        '@SimpleReminder/minutesReminder',
+      );
+      const _messageReminder = await AsyncStorage.getItem(
+        '@SimpleReminder/messageReminder',
+      );
+
+      if (_minutesReminder) {
+        setMinutesReminder(parseInt(_minutesReminder, 10));
+      }
+      if (_messageReminder) {
+        setMessageReminder(_messageReminder, 10);
+      }
+    };
+    loadReminder();
+  }, []);
+
+  useEffect(() => {
+    const setReminder = async () => {
+      await AsyncStorage.setItem(
+        '@SimpleReminder/minutesReminder',
+        minutesReminder.toString(),
+      );
+      await AsyncStorage.setItem(
+        '@SimpleReminder/messageReminder',
+        messageReminder,
+      );
+    };
+    setReminder();
+  }, [minutesReminder, messageReminder]);
 
   const onSetReminderPressed = () => {
     PushNotification.cancelLocalNotifications({id: '0'});
@@ -128,9 +162,7 @@ const App: () => Node = () => {
         <TouchableOpacity
           onPress={onSetReminderPressed}
           style={[styles.button, styles.contained]}>
-          <Text style={isDarkMode ? styles.lightText : styles.darkText}>
-            SET REMINDER
-          </Text>
+          <Text style={styles.lightText}>SET REMINDER</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={onDisableReminderPressed}
