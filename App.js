@@ -9,17 +9,16 @@
 import React, {useState} from 'react';
 import type {Node} from 'react';
 import {
-  SafeAreaView,
+  Alert,
   StatusBar,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  Vibration,
   View,
   useColorScheme,
 } from 'react-native';
-import BackgroundTimer from 'react-native-background-timer';
+import PushNotification from 'react-native-push-notification';
 
 const colors = {
   primary: '#1292B4',
@@ -34,40 +33,55 @@ const colors = {
 const MILLISECONDS_IN_MINUTE = 60000;
 
 const App: () => Node = () => {
-  const [minutesText, setMinutesText] = useState(0);
-  const [minutesReminder, setMinutesReminder] = useState();
+  const [minutesInput, setMinutesInput] = useState('');
+  const [minutesReminder, setMinutesReminder] = useState('0');
   const isDarkMode = useColorScheme() === 'dark';
 
-  const onMinutesTextChanged = _minutesText => {
-    // Remove nonnumeric characters and convert to integer
-    setMinutesText(parseInt(_minutesText.replace(/\D/g, ''), 10));
-  };
-
   const onSetReminderPressed = () => {
-    BackgroundTimer.stopBackgroundTimer();
-    if (minutesText) {
-      setMinutesReminder(minutesText);
-      BackgroundTimer.runBackgroundTimer(() => {
-        Vibration.vibrate();
-      }, minutesText * MILLISECONDS_IN_MINUTE);
+    PushNotification.cancelLocalNotifications({id: '0'});
+
+    if (minutesInput) {
+      const minutes = parseInt(minutesInput, 10);
+      setMinutesReminder(minutes);
+
+      if (!minutes) {
+        Alert.alert('Invalid input', '', [
+          {
+            text: 'OK',
+          },
+        ]);
+
+        return;
+      }
+
+      PushNotification.localNotificationSchedule({
+        id: '0', // Must be string integer
+        channelId: 'simple-reminder',
+        date: new Date(Date.now() + minutes * MILLISECONDS_IN_MINUTE), // Initial notification
+        repeatType: 'time',
+        repeatTime: minutes * MILLISECONDS_IN_MINUTE,
+        title: 'Simple Reminder',
+        message: 'My Notification Message', // Required
+        allowWhileIdle: true,
+      });
     }
   };
 
   const onDisableReminderPressed = () => {
-    BackgroundTimer.stopBackgroundTimer();
-    setMinutesReminder(0);
+    PushNotification.cancelLocalNotifications({id: '0'});
+    setMinutesReminder('0');
   };
 
   return (
-    <SafeAreaView
+    <View
       style={[
         styles.container,
-        isDarkMode ? styles.darkBackground : styles.lightBackground,
+        isDarkMode ? styles.darkerBackground : styles.lighterBackground,
       ]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       <View style={styles.content}>
         <Text style={styles.minutes}>
-          <Text style={styles.highlightText}>{minutesReminder || 0}</Text>
+          <Text style={styles.highlightText}>{minutesReminder}</Text>
           <Text style={isDarkMode ? styles.lightText : styles.darkText}>
             {' '}
             minutes
@@ -75,10 +89,14 @@ const App: () => Node = () => {
         </Text>
         <Text style={styles.label}>Minutes</Text>
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            isDarkMode ? styles.darkBackground : styles.lightBackground,
+            isDarkMode ? styles.lightText : styles.darkText,
+          ]}
           keyboardType={'numeric'}
-          onChangeText={_minutesText => onMinutesTextChanged(_minutesText)}
-          value={minutesText}
+          onChangeText={_minutesInput => setMinutesInput(_minutesInput)}
+          value={minutesInput}
           maxLength={15}
           selectionColor={colors.primary}
           disableFullscreenUI={true}
@@ -96,7 +114,7 @@ const App: () => Node = () => {
           <Text style={styles.highlightText}>DISABLE REMINDER</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -106,9 +124,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   lightBackground: {
+    backgroundColor: colors.light,
+  },
+  lighterBackground: {
     backgroundColor: colors.lighter,
   },
   darkBackground: {
+    backgroundColor: colors.dark,
+  },
+  darkerBackground: {
     backgroundColor: colors.darker,
   },
   lightText: {
@@ -127,8 +151,6 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   input: {
-    color: colors.white,
-    backgroundColor: colors.dark,
     borderRadius: 2,
     marginVertical: 16,
   },
